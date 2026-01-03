@@ -53,12 +53,64 @@ const files = [
   { id: '4', name: 'Music', icon: 'Music', size: '512 MB', items: 87 },
 ];
 
-const notifications = [
+const defaultNotifications = [
   { id: '1', app: 'Gmail', text: 'New email from John Doe', time: '5 min ago', icon: 'Mail' },
   { id: '2', app: 'Messages', text: '3 new messages', time: '15 min ago', icon: 'MessageSquare' },
   { id: '3', app: 'Calendar', text: 'Meeting in 30 minutes', time: '30 min ago', icon: 'Calendar' },
   { id: '4', app: 'YouTube', text: 'New video from your subscription', time: '1 hour ago', icon: 'Play' },
 ];
+
+const appNotificationTemplates: Record<string, { text: string; icon: string }[]> = {
+  'Instagram': [
+    { text: 'john_doe liked your photo', icon: 'Instagram' },
+    { text: 'sarah_m started following you', icon: 'Instagram' },
+    { text: '3 new messages in Direct', icon: 'Instagram' },
+  ],
+  'TikTok': [
+    { text: 'Your video got 1K views!', icon: 'Music' },
+    { text: 'alex_creator posted a new video', icon: 'Music' },
+  ],
+  'Spotify': [
+    { text: 'New album from your favorite artist', icon: 'Music' },
+    { text: 'Your Daily Mix is ready', icon: 'Music' },
+  ],
+  'Telegram': [
+    { text: '5 new messages in Tech Group', icon: 'Send' },
+    { text: 'John sent you a voice message', icon: 'Send' },
+  ],
+  'WhatsApp': [
+    { text: 'Mom: Don\'t forget dinner tonight!', icon: 'MessageCircle' },
+    { text: '3 new messages from Work Chat', icon: 'MessageCircle' },
+  ],
+  'Netflix': [
+    { text: 'New episode of your show is available', icon: 'Tv' },
+    { text: 'Top picks for you this week', icon: 'Tv' },
+  ],
+  'Notion': [
+    { text: 'Team shared a new page with you', icon: 'BookOpen' },
+    { text: 'Reminder: Review project notes', icon: 'BookOpen' },
+  ],
+  'Duolingo': [
+    { text: 'Time for your daily lesson! 🔥', icon: 'GraduationCap' },
+    { text: 'You\'re on a 7 day streak!', icon: 'GraduationCap' },
+  ],
+  'Discord': [
+    { text: '15 new messages in Gaming Server', icon: 'Gamepad2' },
+    { text: '@alex mentioned you', icon: 'Gamepad2' },
+  ],
+  'Canva': [
+    { text: 'Your design is ready to download', icon: 'Palette' },
+    { text: 'New templates added!', icon: 'Palette' },
+  ],
+  'Subway Surfers': [
+    { text: 'Daily challenge available!', icon: 'Gamepad2' },
+    { text: 'New character unlocked!', icon: 'Gamepad2' },
+  ],
+  'Among Us': [
+    { text: 'Friend invited you to a game', icon: 'Users' },
+    { text: 'New map available!', icon: 'Users' },
+  ],
+};
 
 const emailMessages = [
   { id: '1', from: 'John Doe', subject: 'Meeting Tomorrow', preview: 'Hi! Just confirming our meeting...', time: '10:30 AM', unread: true },
@@ -108,6 +160,7 @@ export default function Index() {
   const [installedApps, setInstalledApps] = useState<string[]>([]);
   const [selectedStoreApp, setSelectedStoreApp] = useState<StoreApp | null>(null);
   const [storeCategory, setStoreCategory] = useState<string>('all');
+  const [notifications, setNotifications] = useState(defaultNotifications);
 
   const filteredApps = apps.filter(app =>
     app.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -128,10 +181,27 @@ export default function Index() {
   };
 
   const handleInstallApp = (appId: string) => {
+    const app = storeApps.find(a => a.id === appId);
+    if (!app) return;
+
     if (installedApps.includes(appId)) {
       setInstalledApps(installedApps.filter(id => id !== appId));
+      setNotifications(notifications.filter(n => n.app !== app.name));
     } else {
       setInstalledApps([...installedApps, appId]);
+      
+      const templates = appNotificationTemplates[app.name];
+      if (templates && templates.length > 0) {
+        const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+        const newNotification = {
+          id: `notif-${Date.now()}`,
+          app: app.name,
+          text: randomTemplate.text,
+          time: 'Just now',
+          icon: randomTemplate.icon,
+        };
+        setNotifications([newNotification, ...notifications]);
+      }
     }
   };
 
@@ -960,7 +1030,14 @@ export default function Index() {
             className="relative p-2 hover:bg-muted/50 rounded-full transition-colors"
           >
             <Icon name="Bell" size={18} />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accent rounded-full" />
+            {notifications.length > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accent rounded-full" />
+            )}
+            {notifications.length > 3 && (
+              <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center">
+                {notifications.length}
+              </span>
+            )}
           </button>
 
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -988,23 +1065,43 @@ export default function Index() {
           </div>
           <ScrollArea className="max-h-96">
             <div className="p-4 space-y-3">
-              {notifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  className="p-4 bg-muted/30 rounded-2xl hover:bg-muted/50 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-secondary/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Icon name={notif.icon as any} size={18} className="text-secondary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm mb-1">{notif.app}</p>
-                      <p className="text-xs text-muted-foreground mb-2">{notif.text}</p>
-                      <p className="text-xs text-muted-foreground">{notif.time}</p>
+              {notifications.length === 0 ? (
+                <div className="py-8 text-center">
+                  <Icon name="BellOff" size={48} className="mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">No notifications</p>
+                </div>
+              ) : (
+                notifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    className="p-4 bg-muted/30 rounded-2xl hover:bg-muted/50 transition-colors cursor-pointer group"
+                    onClick={() => {
+                      handleAppClick(notif.app);
+                      setShowNotifications(false);
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-secondary/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Icon name={notif.icon as any} size={18} className="text-secondary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm mb-1">{notif.app}</p>
+                        <p className="text-xs text-muted-foreground mb-2">{notif.text}</p>
+                        <p className="text-xs text-muted-foreground">{notif.time}</p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNotifications(notifications.filter(n => n.id !== notif.id));
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/20 rounded-full"
+                      >
+                        <Icon name="X" size={14} className="text-muted-foreground" />
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </ScrollArea>
         </div>
