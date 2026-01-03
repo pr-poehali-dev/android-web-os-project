@@ -13,7 +13,22 @@ type AppItem = {
   category: 'system' | 'media' | 'productivity' | 'social';
 };
 
-type Section = 'home' | 'apps' | 'settings' | 'files' | 'gallery' | 'notifications';
+type Section = 'home' | 'apps' | 'settings' | 'files' | 'gallery' | 'notifications' | 'store';
+
+type StoreApp = {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  category: 'games' | 'productivity' | 'social' | 'entertainment' | 'tools';
+  description: string;
+  rating: number;
+  downloads: string;
+  size: string;
+  developer: string;
+  screenshots: number;
+  installed?: boolean;
+};
 
 const apps: AppItem[] = [
   { id: '1', name: 'Chrome', icon: 'Globe', color: 'bg-blue-500', category: 'system' },
@@ -28,6 +43,7 @@ const apps: AppItem[] = [
   { id: '10', name: 'Messages', icon: 'MessageSquare', color: 'bg-green-600', category: 'social' },
   { id: '11', name: 'Phone', icon: 'Phone', color: 'bg-emerald-500', category: 'social' },
   { id: '12', name: 'Contacts', icon: 'Users', color: 'bg-indigo-500', category: 'social' },
+  { id: '13', name: 'Play Store', icon: 'ShoppingBag', color: 'bg-blue-400', category: 'system' },
 ];
 
 const files = [
@@ -69,11 +85,29 @@ const contacts = [
   { id: '4', name: 'Emily Brown', phone: '+1 234 567 8903', avatar: 'bg-purple-500' },
 ];
 
+const storeApps: StoreApp[] = [
+  { id: 's1', name: 'Instagram', icon: 'Instagram', color: 'bg-gradient-to-br from-purple-500 to-pink-500', category: 'social', description: 'Photo & video sharing app', rating: 4.5, downloads: '5B+', size: '45 MB', developer: 'Meta', screenshots: 4 },
+  { id: 's2', name: 'TikTok', icon: 'Music', color: 'bg-black', category: 'entertainment', description: 'Short video platform', rating: 4.6, downloads: '3B+', size: '120 MB', developer: 'ByteDance', screenshots: 4 },
+  { id: 's3', name: 'Spotify', icon: 'Music', color: 'bg-green-600', category: 'entertainment', description: 'Music streaming service', rating: 4.4, downloads: '1B+', size: '85 MB', developer: 'Spotify AB', screenshots: 3 },
+  { id: 's4', name: 'Telegram', icon: 'Send', color: 'bg-blue-500', category: 'social', description: 'Fast and secure messaging', rating: 4.7, downloads: '1B+', size: '75 MB', developer: 'Telegram FZ-LLC', screenshots: 4 },
+  { id: 's5', name: 'WhatsApp', icon: 'MessageCircle', color: 'bg-green-500', category: 'social', description: 'Simple. Secure. Reliable messaging.', rating: 4.3, downloads: '5B+', size: '60 MB', developer: 'Meta', screenshots: 3 },
+  { id: 's6', name: 'Netflix', icon: 'Tv', color: 'bg-red-600', category: 'entertainment', description: 'Watch TV shows and movies', rating: 4.5, downloads: '1B+', size: '95 MB', developer: 'Netflix Inc.', screenshots: 4 },
+  { id: 's7', name: 'Notion', icon: 'BookOpen', color: 'bg-gray-800', category: 'productivity', description: 'Notes, docs, tasks & wikis', rating: 4.6, downloads: '100M+', size: '55 MB', developer: 'Notion Labs', screenshots: 4 },
+  { id: 's8', name: 'Duolingo', icon: 'GraduationCap', color: 'bg-green-500', category: 'productivity', description: 'Learn languages for free', rating: 4.7, downloads: '500M+', size: '42 MB', developer: 'Duolingo', screenshots: 4 },
+  { id: 's9', name: 'Discord', icon: 'Gamepad2', color: 'bg-indigo-600', category: 'social', description: 'Chat, talk & hangout', rating: 4.4, downloads: '500M+', size: '95 MB', developer: 'Discord Inc.', screenshots: 3 },
+  { id: 's10', name: 'Canva', icon: 'Palette', color: 'bg-blue-400', category: 'tools', description: 'Design graphics & videos', rating: 4.8, downloads: '500M+', size: '65 MB', developer: 'Canva', screenshots: 4 },
+  { id: 's11', name: 'Subway Surfers', icon: 'Gamepad2', color: 'bg-orange-500', category: 'games', description: 'Endless runner game', rating: 4.5, downloads: '1B+', size: '120 MB', developer: 'SYBO Games', screenshots: 5 },
+  { id: 's12', name: 'Among Us', icon: 'Users', color: 'bg-red-500', category: 'games', description: 'Multiplayer game', rating: 4.2, downloads: '500M+', size: '85 MB', developer: 'Innersloth', screenshots: 4 },
+];
+
 export default function Index() {
   const [currentSection, setCurrentSection] = useState<Section>('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [openApp, setOpenApp] = useState<string | null>(null);
+  const [installedApps, setInstalledApps] = useState<string[]>([]);
+  const [selectedStoreApp, setSelectedStoreApp] = useState<StoreApp | null>(null);
+  const [storeCategory, setStoreCategory] = useState<string>('all');
 
   const filteredApps = apps.filter(app =>
     app.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -84,9 +118,28 @@ export default function Index() {
   );
 
   const handleAppClick = (appName: string) => {
-    setOpenApp(appName);
-    setCurrentSection('home');
+    if (appName === 'Play Store') {
+      setCurrentSection('store');
+      setOpenApp(null);
+    } else {
+      setOpenApp(appName);
+      setCurrentSection('home');
+    }
   };
+
+  const handleInstallApp = (appId: string) => {
+    if (installedApps.includes(appId)) {
+      setInstalledApps(installedApps.filter(id => id !== appId));
+    } else {
+      setInstalledApps([...installedApps, appId]);
+    }
+  };
+
+  const filteredStoreApps = storeApps.filter(app => {
+    const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = storeCategory === 'all' || app.category === storeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const closeApp = () => {
     setOpenApp(null);
@@ -582,6 +635,242 @@ export default function Index() {
           </div>
         );
 
+      case 'store':
+        if (selectedStoreApp) {
+          const isInstalled = installedApps.includes(selectedStoreApp.id);
+          return (
+            <div className="flex-1 flex flex-col bg-background">
+              <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
+                <Button variant="ghost" size="icon" onClick={() => setSelectedStoreApp(null)} className="rounded-full">
+                  <Icon name="ArrowLeft" size={20} />
+                </Button>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Icon name="Share2" size={20} />
+                </Button>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-6 space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`${selectedStoreApp.color} w-20 h-20 rounded-[28px] flex items-center justify-center shadow-xl flex-shrink-0`}>
+                      <Icon name={selectedStoreApp.icon as any} size={40} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-medium mb-1">{selectedStoreApp.name}</h2>
+                      <p className="text-sm text-muted-foreground mb-2">{selectedStoreApp.developer}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Badge variant="secondary" className="rounded-full">
+                          {selectedStoreApp.category}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 py-4 border-y border-border">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <span className="text-lg font-medium">{selectedStoreApp.rating}</span>
+                        <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500" />
+                      </div>
+                      <p className="text-xs text-muted-foreground">Rating</p>
+                    </div>
+                    <div className="text-center border-x border-border">
+                      <p className="text-lg font-medium mb-1">{selectedStoreApp.downloads}</p>
+                      <p className="text-xs text-muted-foreground">Downloads</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-medium mb-1">{selectedStoreApp.size}</p>
+                      <p className="text-xs text-muted-foreground">Size</p>
+                    </div>
+                  </div>
+
+                  <Button 
+                    size="lg" 
+                    className="w-full rounded-full"
+                    variant={isInstalled ? "outline" : "default"}
+                    onClick={() => handleInstallApp(selectedStoreApp.id)}
+                  >
+                    {isInstalled ? (
+                      <>
+                        <Icon name="Trash2" size={20} className="mr-2" />
+                        Uninstall
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="Download" size={20} className="mr-2" />
+                        Install
+                      </>
+                    )}
+                  </Button>
+
+                  <div>
+                    <h3 className="font-medium mb-3">About this app</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {selectedStoreApp.description}. This is a popular {selectedStoreApp.category} app with over {selectedStoreApp.downloads} downloads worldwide. 
+                      Developed by {selectedStoreApp.developer}, it offers a seamless experience with regular updates and new features.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium mb-3">Screenshots</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Array.from({ length: selectedStoreApp.screenshots }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="aspect-[9/16] bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl flex items-center justify-center"
+                        >
+                          <Icon name="Image" size={32} className="text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="font-medium">Ratings & Reviews</h3>
+                    {[
+                      { name: 'John D.', rating: 5, text: 'Amazing app! Highly recommended.', time: '2 days ago' },
+                      { name: 'Sarah M.', rating: 4, text: 'Great features but could use more customization.', time: '1 week ago' },
+                      { name: 'Mike R.', rating: 5, text: 'Best app in its category!', time: '2 weeks ago' },
+                    ].map((review, i) => (
+                      <div key={i} className="p-4 bg-card rounded-2xl border border-border">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="text-xs font-medium">{review.name[0]}</span>
+                            </div>
+                            <span className="text-sm font-medium">{review.name}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{review.time}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mb-2">
+                          {Array.from({ length: 5 }).map((_, j) => (
+                            <Icon
+                              key={j}
+                              name="Star"
+                              size={12}
+                              className={j < review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{review.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </ScrollArea>
+            </div>
+          );
+        }
+
+        return (
+          <div className="flex-1 flex flex-col bg-background">
+            <div className="bg-card border-b border-border px-6 py-4">
+              <h2 className="text-xl font-medium mb-4">Play Store</h2>
+              <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                {['all', 'games', 'social', 'entertainment', 'productivity', 'tools'].map((cat) => (
+                  <Button
+                    key={cat}
+                    variant={storeCategory === cat ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStoreCategory(cat)}
+                    className="rounded-full capitalize whitespace-nowrap"
+                  >
+                    {cat === 'all' ? 'All' : cat}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <ScrollArea className="flex-1">
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Featured Apps</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {filteredStoreApps.slice(0, 3).map((app) => {
+                      const isInstalled = installedApps.includes(app.id);
+                      return (
+                        <div
+                          key={app.id}
+                          className="p-4 bg-card rounded-3xl border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => setSelectedStoreApp(app)}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`${app.color} w-16 h-16 rounded-[24px] flex items-center justify-center shadow-lg flex-shrink-0`}>
+                              <Icon name={app.icon as any} size={32} className="text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium mb-1">{app.name}</h4>
+                              <p className="text-sm text-muted-foreground mb-2 truncate">{app.description}</p>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Icon name="Star" size={12} className="text-yellow-500 fill-yellow-500" />
+                                  {app.rating}
+                                </span>
+                                <span>{app.downloads}</span>
+                                <Badge variant="secondary" className="rounded-full text-xs">
+                                  {app.category}
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={isInstalled ? "outline" : "default"}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleInstallApp(app.id);
+                              }}
+                              className="rounded-full"
+                            >
+                              {isInstalled ? 'Installed' : 'Install'}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium mb-4">All Apps</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {filteredStoreApps.map((app) => {
+                      const isInstalled = installedApps.includes(app.id);
+                      return (
+                        <div
+                          key={app.id}
+                          className="p-4 bg-card rounded-3xl border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => setSelectedStoreApp(app)}
+                        >
+                          <div className={`${app.color} w-14 h-14 rounded-[20px] flex items-center justify-center shadow-lg mb-3`}>
+                            <Icon name={app.icon as any} size={28} className="text-white" />
+                          </div>
+                          <h4 className="font-medium mb-1 text-sm">{app.name}</h4>
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{app.description}</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Icon name="Star" size={10} className="text-yellow-500 fill-yellow-500" />
+                              {app.rating}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant={isInstalled ? "outline" : "default"}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleInstallApp(app.id);
+                              }}
+                              className="rounded-full h-7 px-3 text-xs"
+                            >
+                              {isInstalled ? 'Installed' : 'Get'}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -671,7 +960,7 @@ export default function Index() {
           {[
             { id: 'home', icon: 'Home', label: 'Home' },
             { id: 'apps', icon: 'Grid3x3', label: 'Apps' },
-            { id: 'files', icon: 'FolderOpen', label: 'Files' },
+            { id: 'store', icon: 'ShoppingBag', label: 'Store' },
             { id: 'gallery', icon: 'Images', label: 'Photos' },
             { id: 'settings', icon: 'Settings', label: 'Settings' },
           ].map((nav) => (
@@ -680,6 +969,7 @@ export default function Index() {
               onClick={() => {
                 setCurrentSection(nav.id as Section);
                 setOpenApp(null);
+                setSelectedStoreApp(null);
               }}
               className={`flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all duration-200 ${
                 currentSection === nav.id && !openApp
