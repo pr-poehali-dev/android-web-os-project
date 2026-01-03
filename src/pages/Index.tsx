@@ -146,6 +146,48 @@ export default function Index() {
   };
 
   const renderAppContent = () => {
+    const installedStoreApp = storeApps.find(app => app.name === openApp && installedApps.includes(app.id));
+    
+    if (installedStoreApp) {
+      return (
+        <div className="flex-1 flex flex-col bg-background">
+          <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={closeApp} className="rounded-full">
+                <Icon name="ArrowLeft" size={20} />
+              </Button>
+              <h2 className="text-xl font-medium">{installedStoreApp.name}</h2>
+            </div>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Icon name="MoreVertical" size={20} />
+            </Button>
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center p-8">
+            <div className={`${installedStoreApp.color} w-32 h-32 rounded-[48px] flex items-center justify-center shadow-2xl mb-6`}>
+              <Icon name={installedStoreApp.icon as any} size={64} className="text-white" />
+            </div>
+            <h3 className="text-2xl font-medium mb-2">{installedStoreApp.name}</h3>
+            <p className="text-muted-foreground text-center mb-6 max-w-md">
+              {installedStoreApp.description}
+            </p>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500" />
+                {installedStoreApp.rating}
+              </span>
+              <span>•</span>
+              <span>{installedStoreApp.downloads} downloads</span>
+            </div>
+            <div className="mt-8 p-6 bg-card rounded-3xl border border-border">
+              <p className="text-sm text-center text-muted-foreground">
+                This is a demo app interface. In a real implementation, this would be the full {installedStoreApp.name} experience.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     switch (openApp) {
       case 'Gmail':
         return (
@@ -485,6 +527,15 @@ export default function Index() {
 
     switch (currentSection) {
       case 'home':
+        const installedStoreApps = storeApps.filter(app => installedApps.includes(app.id));
+        const allHomeApps = [...apps, ...installedStoreApps.map(app => ({
+          id: app.id,
+          name: app.name,
+          icon: app.icon,
+          color: app.color,
+          category: 'social' as const
+        }))];
+        
         return (
           <div className="flex-1 p-6">
             <div className="mb-8">
@@ -495,7 +546,7 @@ export default function Index() {
             </div>
 
             <div className="grid grid-cols-5 gap-6 mb-8">
-              {apps.slice(0, 10).map((app) => (
+              {allHomeApps.map((app) => (
                 <button
                   key={app.id}
                   onClick={() => handleAppClick(app.name)}
@@ -539,11 +590,19 @@ export default function Index() {
         );
 
       case 'apps':
+        const allAppsForList = [...apps, ...storeApps.filter(app => installedApps.includes(app.id)).map(app => ({
+          id: app.id,
+          name: app.name,
+          icon: app.icon,
+          color: app.color,
+          category: 'social' as const
+        }))];
+        
         return (
           <div className="flex-1 p-6">
             <h2 className="text-2xl font-light mb-6">All Apps</h2>
             <div className="grid grid-cols-5 gap-6">
-              {filteredApps.map((app) => (
+              {allAppsForList.map((app) => (
                 <button
                   key={app.id}
                   onClick={() => handleAppClick(app.name)}
